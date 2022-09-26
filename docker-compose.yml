@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: mysql:8.0.30
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: grape-music-db
+    ports:
+      - 33306:3306
+    volumes:
+      - db_data_volume:/var/lib/mysql
+
+  api:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/bash -c "npm install &&
+                           npm install nodemon -g &&
+                           nodemon server.js"
+    restart: always
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - 33000:3000
+
+volumes:
+  db_data_volume:
