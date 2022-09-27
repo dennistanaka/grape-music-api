@@ -3,10 +3,13 @@
 const { PrismaClient } = require('@prisma/client')
 const express = require('express')
 const bodyParser = require('body-parser')
+const bcrypt = require('bcrypt')
 
 // Constants
 const PORT = 3000
 const HOST = '0.0.0.0'
+
+const saltRounds = 10
 
 // Instantiate objects
 const prisma = new PrismaClient()
@@ -22,6 +25,14 @@ app.get('/', (req, res) => {
 app.get('/users', async (req, res) => {
   const users = await prisma.user.findMany()
   res.json(users)
+})
+
+app.get('/user/:id', async (req, res) => {
+  const { id } = req.params
+  const user = await prisma.user.findUnique({
+    where: { id: Number(id) }
+  })
+  res.json(user)
 })
 
 app.get('/feed', async (req, res) => {
@@ -41,10 +52,23 @@ app.get('/post/:id', async (req, res) => {
 })
 
 app.post('/user', async (req, res) => {
-  const result = await prisma.user.create({
-    data: { ...req.body }
+  const { email, password, name } = req.body
+
+  bcrypt.hash(password, saltRounds, async (err, hash) => {
+    if (err) {
+      console.log(`[Error] post /user - Could not generate hash: ${err}`)
+      res.statusCode(500)
+    }
+
+    const result = await prisma.user.create({
+      data: {
+        email,
+        password: hash,
+        name
+      }
+    })
+    res.json(result)
   })
-  res.json(result)
 })
 
 app.post('/post', async (req, res) => {
