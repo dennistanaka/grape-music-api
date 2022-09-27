@@ -18,7 +18,7 @@ async function main() {
   console.log('Created new user: ', newUser)
 
   const allUsers = await prisma.user.findMany({
-    include: { posts: true },
+    include: { posts: true }
   })
   console.log('All users: ')
   console.dir(allUsers, { depth: null })
